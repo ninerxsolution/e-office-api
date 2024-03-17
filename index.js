@@ -121,6 +121,32 @@ async function replyProfileUnblock(event) {
     }
 }
 
+async function replyMessege(event) {
+    try {
+        let resp = await fetch('https://api.line.me/v2/bot/message/reply', {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: 'Bearer ' + config.channelAccessToken
+            },
+            method: "POST",
+            body: JSON.stringify({
+                replyToken: event.replyToken,
+                messages: [{
+                    type: 'text',
+                    text: 'ขออภัยในความไม่สะดวก Line Bot Official ไม่ได้ถูกออกแบบมาเพื่อให้ผู้ใช้ส่งข้อความ'
+                }]
+            })
+        });
+
+        let j = await resp.json();
+        // console.log(j);
+        return j;
+    } catch (err) {
+        console.error('Error in replyProfile:', err);
+        return null;
+    }
+}
+
 async function handleEvent(event) {
     const userId = event.source.userId;
     let fetchProfilData = await fetchProfile(userId);
@@ -146,6 +172,7 @@ async function handleEvent(event) {
             if (event.message && event.message.type === 'text') {
                 console.log('Try to send message.');
                 console.log('that message :', event.message.text);
+                replyMessege(event);
             } else {
                 console.log('Just do something.');
             }
@@ -159,10 +186,12 @@ async function handleEvent(event) {
             // Handle follow event
             const existingLineUid = await Line_UID.findOne({ where: { uid: userId } });
             if (!existingLineUid) {
+                const displayName = '';
                 const newRef = createReferenceKey(userId);
                 const existingNewRef = await Line_UID.findOne({ where: { ref_key: newRef } });
+                let fetchProfilData = await fetchProfile(userId);
                 if (!existingNewRef) {
-                    await Line_UID.create({ uid: userId, ref_key: newRef });
+                    await Line_UID.create({ uid: userId, display_name: fetchProfilData.displayName, ref_key: newRef });
                     await replyProfile(event, newRef);
                     console.log('Reference key :', newRef)
                     console.log('Just follow.');
