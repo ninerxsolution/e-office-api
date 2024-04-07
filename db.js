@@ -26,6 +26,7 @@ const Profile = sequelize.define('Profile', {
         allowNull: false
     },
 }, {
+    tableName: 'profiles',
     timestamps: false,
 });
 
